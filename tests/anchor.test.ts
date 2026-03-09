@@ -1,34 +1,41 @@
 // No imports needed: web3, anchor, pg and more are globally available
 
-describe("Test", () => {
-  it("initialize", async () => {
-    // Generate keypair for the new account
-    const newAccountKp = new web3.Keypair();
+describe("Tienda", () => {
+  it("Crear tienda", async () => {
 
-    // Send transaction
-    const data = new BN(42);
-    const txHash = await pg.program.methods
-      .initialize(data)
-      .accounts({
-        newAccount: newAccountKp.publicKey,
-        signer: pg.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-      })
-      .signers([newAccountKp])
-      .rpc();
-    console.log(`Use 'solana confirm -v ${txHash}' to see the logs`);
+    // Obtener wallet del usuario
+    const owner = pg.wallet.publicKey;
 
-    // Confirm transaction
-    await pg.connection.confirmTransaction(txHash);
-
-    // Fetch the created account
-    const newAccount = await pg.program.account.newAccount.fetch(
-      newAccountKp.publicKey
+    // Crear PDA de la tienda
+    const [tiendaPda] = await web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from("tienda"),
+        owner.toBuffer(),
+      ],
+      pg.program.programId
     );
 
-    console.log("On-chain data is:", newAccount.data.toString());
+    // Enviar transacción para crear la tienda
+    const txHash = await pg.program.methods
+      .crearTienda("Zapatería Noelia")
+      .accounts({
+        owner: owner,
+        tienda: tiendaPda,
+        systemProgram: web3.SystemProgram.programId,
+      })
+      .rpc();
 
-    // Check whether the data on-chain is equal to local 'data'
-    assert(data.eq(newAccount.data));
+    console.log(`Usa 'solana confirm -v ${txHash}' para ver los logs`);
+
+    // Confirmar transacción
+    await pg.connection.confirmTransaction(txHash);
+
+    // Obtener datos de la cuenta en la blockchain
+    const tienda = await pg.program.account.tienda.fetch(tiendaPda);
+
+    console.log("Datos de la tienda en blockchain:", tienda);
+
+    // Verificar datos
+    assert(tienda.nombre === "Zapatería Noelia");
   });
 });
