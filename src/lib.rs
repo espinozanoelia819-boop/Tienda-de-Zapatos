@@ -2,7 +2,7 @@
 use anchor_lang::prelude::*;
 
 // ID único del programa desplegado en la blockchain
-declare_id!("CPydZL5gyh3Tk5Zj28tnJrF1XbVefPgzpQu5VKjhEDRF");
+declare_id!("");
 
 // Módulo principal del programa
 #[program]
